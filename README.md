@@ -1,9 +1,10 @@
 # devops-interview
+
 Public repository for DevOps interview exercises
 
 # AWS Fargate Challenge: Load-Balanced Web Service
 
-## Objective:
+## Objective
 
 Deploy a dockerized application (NGINX, Busybox, or custom) to ECS Fargate with:
 
@@ -17,7 +18,7 @@ Application should display "Hello Pulumi world!" in browser when pointed to ```e
 
 Include any production grade features you deem appropriate.
 
-## Constraints:
+## Constraints
 
 - Use Pulumi IaC only, do not use Pulumi Cloud
 
@@ -25,4 +26,12 @@ Include any production grade features you deem appropriate.
 
 - Do not use Pulumi CrossWalk (pulumi/awsx package)
 
+## Submission
 
+Here are my notes on this submission. I followed the Pulumi [example hello-ts-fargate](https://github.com/pulumi/examples/tree/master/aws-ts-hello-fargate)
+
+- [ ] Auto-scaling
+- [ ] Secure HTTPS
+- [ ] Configurable DNS with `dev.wci-test.org` as a target
+- [ ] Deployable in `us-west-2`
+- [ ] Hello-world application
