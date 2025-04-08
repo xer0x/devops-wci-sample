@@ -90,6 +90,44 @@ const httpTaskDefinition = new aws.ecs.TaskDefinition("httpTaskDefinition", {
 //   ipProtocol: "-1",
 // });
 
+
+/// Network security group to ensure traffic gets from ALB -> ECS Service
+//
+// The ALB -> HTTP service are not connected, or getting requests yet.  Hopefully this fixes it.
+//
+const httpServiceSg = new aws.ec2.SecurityGroup("ecs-service-sg", {
+  vpcId: vpc.vpc.id,
+  description: "Security group for the ECS service",
+  ingress: [
+    {
+      /// swapped this to allow everything
+      protocol: "-1",
+      //protocol: "tcp",
+      // fromPort: 80,
+      // toPort: 80,
+      fromPort: 0,
+      toPort: 0,
+      // securityGroups: [alb.albSecurityGroupId], // Only allow traffic from the ALB
+      //securityGroups: [alb.albSecurityGroupId], // Only allow traffic from the ALB
+      cidrBlocks: ["0.0.0.0/0"],
+      description: "Allow HTTP traffic from ALB",
+    },
+  ],
+  egress: [
+    {
+      protocol: "-1",
+      fromPort: 0,
+      toPort: 0,
+      cidrBlocks: ["0.0.0.0/0"],
+      description: "Allow all outbound traffic",
+    },
+  ],
+  tags: {
+    Name: "ecs-service-security-group",
+  },
+});
+
+
 /// Create service to run the hello-world server
 const httpService = new aws.ecs.Service("http", {
   name: "http",
@@ -98,13 +136,22 @@ const httpService = new aws.ecs.Service("http", {
   taskDefinition: httpTaskDefinition.arn,
   desiredCount: 3,
   networkConfiguration: {
-    assignPublicIp: true,
+    assignPublicIp: false,
     // securityGroups: [allowHttp.id], // WHAT?!  This can cause a Pulumi AWS API error, but it is not clear why. To fix, comment out assignPublicIp and securityGroups
+    securityGroups: [httpServiceSg.id], // WHAT?!  This can cause a Pulumi AWS API error, but it is not clear why. To fix, comment out assignPublicIp and securityGroups
     subnets: vpc.publicSubnets.map(subnet => subnet.id),
   },
-  availabilityZoneRebalancing: 'DISABLED'
+  loadBalancers: [{
+    containerName: "hello-world", // Must match the task containerName
+    containerPort: 80,
+    targetGroupArn: alb.targetGroup.arn
+  }],
+  availabilityZoneRebalancing: 'ENABLED',
+  // Set deployment settings (this might smooth auto-scaling around deployments?)
+  deploymentMinimumHealthyPercent: 100,
+  deploymentMaximumPercent: 200,
 }, {
-  dependsOn: [ecsTaskExecutionRole],
+  dependsOn: [ecsTaskExecutionRole, alb.targetGroup],
 });
 
 /// Autoscaling
