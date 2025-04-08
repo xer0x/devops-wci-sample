@@ -4,6 +4,7 @@ import * as docker_build from "@pulumi/docker-build";
 
 import * as vpc from "./vpc";
 import * as app from "./app_container";
+import * as alb from "./load_balancer";
 
 
 /// Create cluster
@@ -104,4 +105,30 @@ const httpService = new aws.ecs.Service("http", {
   availabilityZoneRebalancing: 'DISABLED'
 }, {
   dependsOn: [ecsTaskExecutionRole],
+});
+
+/// Autoscaling
+const httpTarget = new aws.appautoscaling.Target("http_target", {
+  resourceId: pulumi.interpolate`service/${cluster.name}/${httpService.name}`,
+  scalableDimension: "ecs:service:DesiredCount",
+  minCapacity: 1,
+  maxCapacity: 5,
+  serviceNamespace: "ecs"
+});
+
+/// I chose TargetTracking for its simplicity
+const ecsPolicy = new aws.appautoscaling.Policy("http_scaling_policy", {
+  name: "scale-up",
+  policyType: "TargetTrackingScaling",
+  resourceId: httpTarget.resourceId,
+  scalableDimension: httpTarget.scalableDimension,
+  serviceNamespace: httpTarget.serviceNamespace,
+  targetTrackingScalingPolicyConfiguration: {
+    predefinedMetricSpecification: {
+      predefinedMetricType: "ECSServiceAverageCPUUtilization",
+    },
+    targetValue: 70.0,            // Target 70% CPU utilization
+    scaleInCooldown: 300,         // Wait 5 minutes before scaling in
+    scaleOutCooldown: 60,         // Wait 1 minute before scaling out
+  },
 });
