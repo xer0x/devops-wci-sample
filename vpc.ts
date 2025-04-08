@@ -65,6 +65,16 @@ const publicSubnet3 = new aws.ec2.Subnet("public-subnet-2c", {
   },
 });
 
+const publicSubnet4 = new aws.ec2.Subnet("public-subnet-2d", {
+  vpcId: vpc.id,
+  cidrBlock: "10.0.5.0/24",
+  availabilityZone: "us-west-2d",
+  mapPublicIpOnLaunch: true,
+  tags: {
+    Name: "public-subnet-2d",
+  },
+});
+
 // Create a route table for the public subnet
 const publicRouteTable = new aws.ec2.RouteTable("public-route-table", {
   vpcId: vpc.id,
@@ -95,6 +105,11 @@ const publicRouteTableAssociation3 = new aws.ec2.RouteTableAssociation("public-r
   routeTableId: publicRouteTable.id,
 });
 
+const publicRouteTableAssociation4 = new aws.ec2.RouteTableAssociation("public-route-table-association-4", {
+  subnetId: publicSubnet4.id,
+  routeTableId: publicRouteTable.id,
+});
+
 // Create a route table for the private subnet
 const privateRouteTable = new aws.ec2.RouteTable("private-route-table", {
   vpcId: vpc.id,
@@ -116,4 +131,4 @@ export const vpcId = vpc.id;
 // export const publicSubnetId = publicSubnet.id;
 export const privateSubnetId = privateSubnet.id;
 
-export const publicSubnets = [publicSubnet1, publicSubnet2, publicSubnet3]
+export const publicSubnets = [publicSubnet1, publicSubnet2, publicSubnet3, publicSubnet4]

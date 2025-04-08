@@ -136,7 +136,7 @@ const httpService = new aws.ecs.Service("http", {
   taskDefinition: httpTaskDefinition.arn,
   desiredCount: 3,
   networkConfiguration: {
-    assignPublicIp: false,
+    assignPublicIp: true,
     // securityGroups: [allowHttp.id], // WHAT?!  This can cause a Pulumi AWS API error, but it is not clear why. To fix, comment out assignPublicIp and securityGroups
     securityGroups: [httpServiceSg.id], // WHAT?!  This can cause a Pulumi AWS API error, but it is not clear why. To fix, comment out assignPublicIp and securityGroups
     subnets: vpc.publicSubnets.map(subnet => subnet.id),
@@ -148,8 +148,8 @@ const httpService = new aws.ecs.Service("http", {
   }],
   availabilityZoneRebalancing: 'ENABLED',
   // Set deployment settings (this might smooth auto-scaling around deployments?)
-  deploymentMinimumHealthyPercent: 100,
-  deploymentMaximumPercent: 200,
+  //deploymentMinimumHealthyPercent: 100,
+  //deploymentMaximumPercent: 200,
 }, {
   dependsOn: [ecsTaskExecutionRole, alb.targetGroup],
 });
