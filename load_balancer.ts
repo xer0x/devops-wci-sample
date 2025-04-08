@@ -3,11 +3,21 @@ import * as aws from "@pulumi/aws";
 import * as vpc from "./vpc";
 
 /// TODO: Create certificate
-//
 // const certificate = new aws.acm.Certificate("my-certificate", {
-//   domainName: "example1.dev.example.com",
+//   //   domainName: "example1.dev.example.com",
+//   domainName: "example1.dev.wci-test.org",
 //   validationMethod: "DNS",
 // });
+
+/// Get the DNS zone, so we can use it to validatation
+// const zone = aws.route53.getZone({
+//   name: "dev.sluglab.com",
+//   privateZone: false,
+// });
+
+// const verificationRecord: aws.route53.Record[] = [];
+
+// const awsCertificate = new aws.acm.CertificateValidation('http-cert-validation', {});
 
 /// TODO: Create security group for alb
 const albSg = new aws.ec2.SecurityGroup("alb-sg", {
@@ -75,6 +85,19 @@ export const targetGroup = new aws.lb.TargetGroup("http-tg", {
     Name: "app-target-group",
   },
 });
+
+// const httpsListener = new aws.lb.Listener("https-listener", {
+//   loadBalancerArn: alb.arn,
+//   port: 443,
+//   protocol: "HTTPS",
+//   sslPolicy: "ELBSecurityPolicy-2016-08", // AWS recommended policy
+//   certificateArn: certificate.arn,
+//   defaultActions: [{
+//     type: "forward",
+//     targetGroupArn: targetGroup.arn,
+//   }],
+// });
+// TODO: do we need a dependsOn certificate here?
 
 const httpListener = new aws.lb.Listener("http-listener", {
   loadBalancerArn: alb.arn,

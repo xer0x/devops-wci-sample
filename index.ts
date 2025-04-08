@@ -147,9 +147,19 @@ const httpService = new aws.ecs.Service("http", {
     targetGroupArn: alb.targetGroup.arn
   }],
   availabilityZoneRebalancing: 'ENABLED',
-  // Set deployment settings (this might smooth auto-scaling around deployments?)
-  //deploymentMinimumHealthyPercent: 100,
-  //deploymentMaximumPercent: 200,
+
+  // Lower minimum to allow old tasks to be stopped even if new ones aren't fully healthy yet
+  // Caution: this can cause deployments to fail when at 100
+  deploymentMinimumHealthyPercent: 50,
+
+  // Allow more headroom for new tasks to start up
+  deploymentMaximumPercent: 200,
+
+  // Consider adding circuit breaker to prevent endless failed deployments
+  deploymentCircuitBreaker: {
+    enable: true,
+    rollback: true,
+  },
 }, {
   dependsOn: [ecsTaskExecutionRole, alb.targetGroup],
 });
