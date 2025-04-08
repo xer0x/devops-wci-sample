@@ -1,5 +1,10 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
+import * as docker_build from "@pulumi/docker-build";
+
+import * as vpc from "./vpc";
+import * as app from "./app_container";
+
 
 /// Create cluster
 const cluster = new aws.ecs.Cluster("cluster");
@@ -34,41 +39,69 @@ const attach = new aws.iam.RolePolicyAttachment("ecsRolePolicyAttachment", {
 /// Create task definition for http hello-world service
 const httpTaskDefinition = new aws.ecs.TaskDefinition("httpTaskDefinition", {
   family: "http",
-  containerDefinitions: JSON.stringify([
-    {
-      name: "hello-world",
-      image: "skyzyx/nginx-hello-world",
-      cpu: 10,
-      memory: 512,
-      essential: true,
-      portMappings: [{
-        containerPort: 80,
-        hostPort: 80,
-      }],
-    }
-  ])
+  requiresCompatibilities: ["FARGATE"],
+  executionRoleArn: ecsTaskExecutionRole.arn,
+  networkMode: "awsvpc",
+  cpu: "256", // 1024 CPU units == 1 vCPU
+  memory: "512",
+  /// 🤯 TODO: learn how pulumi.all() makes this wait, so that apply actually happens on time. (race condition 🏎️)
+  containerDefinitions: pulumi.all([app.imageRef]).apply(([imageRef]) => {
+    const shortImageRef = imageRef.split('@')[0];
+    return JSON.stringify([
+      {
+        name: "hello-world",
+        image: shortImageRef,
+        //image: "696433927643.dkr.ecr.us-west-2.amazonaws.com/repo:latest",
+        cpu: 256,
+        memory: 512,
+        essential: true,
+        portMappings: [{
+          containerPort: 80
+        }],
+      }
+    ])
+  })
+}, {
+  dependsOn: [app.appImage]
 });
+
+// Security group for HTTP service (This is probably way to strict)
+// const allowHttp = new aws.ec2.SecurityGroup("allow_http", {
+//   name: "allow_http",
+//   description: "Allow http inbound traffic and all outbound traffic",
+//   vpcId: vpc.vpcId,
+//   tags: {
+//     Name: "allow_http",
+//   },
+// });
+//
+// const allowHttpIpv4 = new aws.vpc.SecurityGroupIngressRule("allow_tls_ipv4", {
+//   securityGroupId: allowHttp.id,
+//   cidrIpv4: vpc.vpc.cidrBlock,
+//   fromPort: 80,
+//   ipProtocol: "tcp",
+//   toPort: 80,
+// });
+//
+// const allowAllTrafficIpv4 = new aws.vpc.SecurityGroupEgressRule("allow_all_traffic_ipv4", {
+//   securityGroupId: allowHttp.id,
+//   cidrIpv4: "0.0.0.0/0",
+//   ipProtocol: "-1",
+// });
 
 /// Create service to run the hello-world server
 const httpService = new aws.ecs.Service("http", {
   name: "http",
   cluster: cluster.id,
+  launchType: "FARGATE",
   taskDefinition: httpTaskDefinition.arn,
   desiredCount: 3,
-  // iamRole: fooAwsIamRole.arn,
-  // orderedPlacementStrategies: [{
-  //   type: "binpack",
-  //   field: "cpu",
-  // }],
-  // loadBalancers: [{
-  //   targetGroupArn: fooAwsLbTargetGroup.arn,
-  //   containerName: "mongo",
-  //   containerPort: 8080,
-  // }],
-  // placementConstraints: [{
-  //   type: "memberOf",
-  //   expression: "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]",
-  // }],
+  networkConfiguration: {
+    assignPublicIp: true,
+    // securityGroups: [allowHttp.id], // WHAT?!  This can cause a Pulumi AWS API error, but it is not clear why. To fix, comment out assignPublicIp and securityGroups
+    subnets: vpc.publicSubnets.map(subnet => subnet.id),
+  },
+  availabilityZoneRebalancing: 'DISABLED'
 }, {
   dependsOn: [ecsTaskExecutionRole],
 });

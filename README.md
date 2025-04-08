@@ -28,10 +28,21 @@ Include any production grade features you deem appropriate.
 
 ## Submission
 
-Here are my notes on this submission. I followed the Pulumi [example hello-ts-fargate](https://github.com/pulumi/examples/tree/master/aws-ts-hello-fargate)
+Here are my notes on this submission. I followed the Pulumi [example hello-ts-fargate](https://github.com/pulumi/examples/tree/master/aws-ts-hello-fargate) unfortunately it used pulumi/awsx so I used pulumi/aws calls instead.
 
+- [x] ECS Fargate cluster
+- [x] Service definition
 - [ ] Auto-scaling
 - [ ] Secure HTTPS
-- [ ] Configurable DNS with `dev.wci-test.org` as a target
-- [ ] Deployable in `us-west-2`
-- [ ] Hello-world application
+- [ ] Configurable DNS with `dev.wci-test.org` as a target, and uses the `exercise1` cname.
+- [x] Deployable in `us-west-2`
+- [x] Hello-world application
+- [ ] Testing via [docs](https://www.pulumi.com/docs/iac/concepts/testing/)
+
+## Surprises
+
+The forbidden Pulumi CrossWalk (@pulumi/awsx) looks like a much easier path.
+
+The "@pulumi/docker-build" module builds a container named "latest", at least when following their docs.
+
+The async promises code is semi-hidden in Pulumi. This totally confused me. `JSON.stringify({value: pulumi_value.apply(x => x + 1)})`` This code won't run the apply, until after the original value is used.  To fix it, I had to add a`pulumi.all()` call to force it to wait.
