@@ -28,16 +28,30 @@ Include any production grade features you deem appropriate.
 
 ## Submission
 
-Here are my notes on this submission. I followed the Pulumi [example hello-ts-fargate](https://github.com/pulumi/examples/tree/master/aws-ts-hello-fargate) unfortunately it used pulumi/awsx so I used pulumi/aws calls instead.
+Here are my notes on this submission. Originally, I thought I could follow the official Pulumi [example hello-ts-fargate](https://github.com/pulumi/examples/tree/master/aws-ts-hello-fargate) unfortunately it used @pulumi/awsx, and so I had to abandon it, and use the more primitive @pulumi/aws.
 
 - [x] ECS Fargate cluster
-- [x] Service definition
+- [x] Service definition for app
 - [x] Auto-scaling
-- [ ] Secure HTTPS
-- [ ] Configurable DNS with `dev.wci-test.org` as a target, and uses the `exercise1` cname.
+- [x] Secure HTTPS
+- [x] Configurable DNS with `dev.wci-test.org` as a target, and uses the `exercise1` cname.
 - [x] Deployable in `us-west-2`
 - [x] Hello-world application
 - [ ] Testing via [docs](https://www.pulumi.com/docs/iac/concepts/testing/)
+
+## Configuration
+
+To configure this to work set the `domainname` to match an existing Route53 zone in your AWS account.
+
+```shell
+pulumi config set domainname example1.dev.wci-test.org
+```
+
+Also remove the `aws:profile` value from the `Pulumi.dev.yaml`
+
+```shell
+pulumi config rm aws:profile
+```
 
 ## Surprises
 
@@ -49,4 +63,4 @@ The async promises code is semi-hidden in Pulumi. This totally confused me. `JSO
 
 Researched auto-scaling, and it looks like "target" based is the simplest. We can have it increase the number of desired containers to run.
 
-Setting up an Application Load Balancer with DNS to wrap this up. It's not done, and I'm over the time.
+Setting up an Application Load Balancer with DNS took awhile to configure the DNS values, and get the verification working.

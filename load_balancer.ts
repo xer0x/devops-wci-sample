@@ -2,11 +2,13 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import * as vpc from "./vpc";
 
-const domainName = "example1.dev.sluglab.com"; // sluglab.com is my domain
-// const domainName = "example1.dev.wci-test.org";
+const config = new pulumi.Config()
+const domainName = config.require("domainname"); // "example1.dev.wci-test.org";
+const zoneName = removeFirstSubdomain(domainName); // "dev.wci-test.org"
 
-const zoneName = "dev.sluglab.com";
-// const zoneName = "dev.wci-test.org";
+function removeFirstSubdomain(domain: String) {
+  return domain.substring(domain.indexOf('.') + 1);
+}
 
 /// Create certificate
 const certificate = new aws.acm.Certificate("alb-certificate", {
@@ -124,7 +126,6 @@ const httpsListener = new aws.lb.Listener("https-listener", {
     targetGroupArn: targetGroup.arn,
   }],
 });
-// TODO: do we need a dependsOn certificate here?
 
 /// Add http listener
 const httpListener = new aws.lb.Listener("http-listener", {
@@ -150,3 +151,4 @@ const aRecord = new aws.route53.Record("alb-aRecord", {
 
 export const dnsName = alb.dnsName;
 export const albSecurityGroupId = albSg.id;
+export const albDomainName = domainName;
