@@ -20,7 +20,7 @@ const config = new pulumi.Config()
 const domainName = config.require("domainname"); // "example1.dev.wci-test.org";
 const zoneName = removeFirstSubdomain(domainName); // "dev.wci-test.org"
 
-function removeFirstSubdomain(domain: String) {
+function removeFirstSubdomain(domain: string) {
   return domain.substring(domain.indexOf('.') + 1);
 }
 
