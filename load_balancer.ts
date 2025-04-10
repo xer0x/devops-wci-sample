@@ -1,3 +1,17 @@
+/**
+ * Load balancer
+ *
+ * This sets up a public facing application load balancer to send traffic to the
+ * service running on the ECS Fargate cluster.
+ *
+ * It creates an AWS ACM TLS certificate oo provide for the HTTPS listener.
+ *
+ * The shared VPC and Subnets are imported from ./vpc.ts
+ *
+ * It exports the target group, security groups, and dns names to find it. I believe dnsName is the AWS domain name, and albDomainName uses the configured custom domain(wci-test.org).
+ *
+ */
+
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import * as vpc from "./vpc";
@@ -114,7 +128,7 @@ export const targetGroup = new aws.lb.TargetGroup("http-tg", {
   },
 });
 
-/// Add https listener
+/// Add https listener for port 443
 const httpsListener = new aws.lb.Listener("https-listener", {
   loadBalancerArn: alb.arn,
   port: 443,
@@ -127,7 +141,7 @@ const httpsListener = new aws.lb.Listener("https-listener", {
   }],
 });
 
-/// Add http listener
+/// Add http listener for port 80
 const httpListener = new aws.lb.Listener("http-listener", {
   loadBalancerArn: alb.arn,
   port: 80,
