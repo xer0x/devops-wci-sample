@@ -5,7 +5,8 @@ import * as docker_build from "@pulumi/docker-build";
 
 // Create Amazon ECR to hold our containers
 const repo = new aws.ecr.Repository("wci-repo", {
-  name: "wci/hello"
+  name: "wci/hello",
+  forceDelete: true,
 });
 
 // Grab auth credentials for ECR.
