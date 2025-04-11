@@ -7,9 +7,14 @@ import * as alb from "./load_balancer";
 
 
 /// Create cluster
-const cluster = new aws.ecs.Cluster("cluster");
+const cluster = new aws.ecs.Cluster("cluster", {
+  tags: {
+    "project": "wci-sample"
+  }
+});
 
-/// Create ecsTaskExecutionRole to pull Amazon ECR images (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)
+/// Create ecsTaskExecutionRole, used to start/deploy tasks, not by the running task
+//  It is used to pull Amazon ECR images (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)
 const ecsTaskExecutionRole = new aws.iam.Role("ecsTaskExecutionRole", {
   name: "ecsTaskExecutionRole",
   assumeRolePolicy: JSON.stringify({
@@ -26,7 +31,7 @@ const ecsTaskExecutionRole = new aws.iam.Role("ecsTaskExecutionRole", {
     ]
   }),
   tags: {
-    "tag-key": "tag-value",
+    "project": "wci-sample",
   },
 });
 
@@ -163,4 +168,4 @@ const ecsPolicy = new aws.appautoscaling.Policy("http_scaling_policy", {
   },
 });
 
-export const loadBalancer = alb.albDomainName;
+export const loadBalancerUrl = 'https://' + alb.albDomainName;
