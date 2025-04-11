@@ -7,7 +7,7 @@ import * as alb from "./load_balancer";
 
 
 /// Create cluster
-export const cluster = new aws.ecs.Cluster("cluster");
+const cluster = new aws.ecs.Cluster("cluster");
 
 /// Create ecsTaskExecutionRole to pull Amazon ECR images (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)
 const ecsTaskExecutionRole = new aws.iam.Role("ecsTaskExecutionRole", {
@@ -163,3 +163,4 @@ const ecsPolicy = new aws.appautoscaling.Policy("http_scaling_policy", {
   },
 });
 
+export const loadBalancer = alb.albDomainName;
