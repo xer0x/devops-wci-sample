@@ -5,7 +5,6 @@ import * as vpc from "./vpc";
 import * as app from "./app_container";
 import * as alb from "./load_balancer";
 
-
 /// Create cluster
 const cluster = new aws.ecs.Cluster("cluster", {
   tags: {

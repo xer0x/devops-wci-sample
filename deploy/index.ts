@@ -4,6 +4,6 @@ import * as cluster from "./infrastructure/cluster";
 const config = new pulumi.Config();
 const projectName = pulumi.getProject();
 const stackName = pulumi.getStack();
-const namePrefix = `${projectName}-${stackName}`;
+const prefix = `${projectName}-${stackName}`;
 
 export const { loadBalancerUrl } = cluster;
