@@ -21,7 +21,7 @@ export const appImage = new docker_build.Image("hello-wci", {
   // Tag our image with our ECR repository's address.
   tags: [pulumi.interpolate`${repo.repositoryUrl}:latest`],
   context: {
-    location: "./app",
+    location: "../app",
   },
   // Use the pushed image as a cache source.
   // cacheFrom: [{
