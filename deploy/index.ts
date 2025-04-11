@@ -1,3 +1,3 @@
-import * as cluster from "./cluster";
+import * as cluster from "./infrastructure/cluster";
 
 export const { loadBalancerUrl } = cluster;
