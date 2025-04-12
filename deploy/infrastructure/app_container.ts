@@ -24,15 +24,15 @@ export const appImage = new docker_build.Image("hello-wci", {
     location: "../app",
   },
   // Use the pushed image as a cache source.
-  // cacheFrom: [{
-  //   registry: {
-  //     ref: pulumi.interpolate`${repo.repositoryUrl}:cache`,
-  //   },
-  // }],
-  // // Maybe this is silly to copy this cache code
+  cacheFrom: [{
+    registry: {
+      ref: pulumi.interpolate`${repo.repositoryUrl}:latest`,
+    },
+  }],
+  // TODO: The cacheTo section causes an HTTP 400 error on PUT
   // cacheTo: [{
   //   registry: {
-  //     ref: pulumi.interpolate`${repo.repositoryUrl}:cache`,
+  //     ref: pulumi.interpolate`${repo.repositoryUrl}:latest`,
   //   },
   // }],
   // Build a multi-platform image manifest for ARM and AMD.
