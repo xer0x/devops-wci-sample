@@ -12,7 +12,7 @@ import * as aws from "@pulumi/aws";
 // 1 Internet gateway
 
 export interface vpcArgs {
-  prefix?: pulumi.Input<string>;
+  example?: pulumi.Input<string>;
   tags?: { [key: string]: pulumi.Input<string> };
 }
 
