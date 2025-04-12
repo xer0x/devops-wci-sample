@@ -31,7 +31,7 @@ export class Vpc extends pulumi.ComponentResource {
     super("mycomponents:index:vpc", name, {}, opts);
 
     /// Create a VPC
-    this.vpc = new aws.ec2.Vpc("wci-vpc", {
+    this.vpc = new aws.ec2.Vpc(`${name}-vpc`, {
       cidrBlock: "10.0.0.0/16",
       enableDnsSupport: true,
       enableDnsHostnames: true,

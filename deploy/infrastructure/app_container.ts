@@ -11,5 +11,6 @@ export const appImage = new Container('wci-hello', {
 })
 
 // Export a ref for the pushed images so we can deploy it.
-export const imageRef = appImage.imageFullName;
+export const imageRef = appImage.image.ref;
+export const imageName = appImage.imageFullName;
 

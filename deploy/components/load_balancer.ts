@@ -10,7 +10,13 @@ export interface loadBalancerArgs {
 }
 
 /**
- * vpc
+ * LoadBalancer
+ *
+ * Creates an ALB with an HTTPS certificate with DNS verification
+ *
+ * Exports the target group, so it can be linked to the ECS Fargate container
+ *
+ * Refactoring ideas: extract DNS verification, security-groups, and maybe the listener configurations
  *
  * Built as a component following https://www.pulumi.com/blog/pulumi-components/
  */

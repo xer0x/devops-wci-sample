@@ -24,7 +24,7 @@ export interface containerArgs {
  */
 export class Container extends pulumi.ComponentResource {
   public readonly repository: aws.ecr.Repository;
-  public readonly appImage: docker_build.Image;
+  public readonly image: docker_build.Image;
   public readonly imageFullName: pulumi.Output<string>;
 
   constructor(name: string, args: containerArgs, opts?: pulumi.ComponentResourceOptions) {
@@ -50,7 +50,7 @@ export class Container extends pulumi.ComponentResource {
     this.imageFullName = pulumi.interpolate`${this.repository.repositoryUrl}:${tag}`;
 
     // Build and push an image to ECR with inline caching.
-    this.appImage = new docker_build.Image(`${name}-img`, {
+    this.image = new docker_build.Image(`${name}-img`, {
       // To publish the image, include the full repository url in the name tag
       tags: [this.imageFullName],
       context: {
