@@ -64,3 +64,7 @@ The async promises code is semi-hidden in Pulumi. This totally confused me. `JSO
 Researched auto-scaling, and it looks like "target" based is the simplest. We can have it increase the number of desired containers to run.
 
 Setting up an Application Load Balancer with DNS took awhile to configure the DNS values, and get the verification working.
+
+I started adding tests. However since everything loaded at once, I started refactoring into TypeScript classes using Pulumi's component library pattern. I'm hoping that this pattern helps make the system easier to write tests for.
+
+I moved the Pulumi resources into the /deploy folder. It's an experiment to tidy up the root folder.
