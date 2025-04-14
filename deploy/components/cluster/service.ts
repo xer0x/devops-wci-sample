@@ -1,13 +1,16 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 
-//// Create an ECS Fargate cluster
+/// Create a new service on a ECS Fargate cluster
 
-export interface clusterArgs {
+export interface serviceArgs {
+  cluster: pulumi.Input<aws.ecs.Cluster>;
+  taskExecutionRole: pulumi.Input<aws.iam.Role>;
   vpc: pulumi.Input<aws.ec2.Vpc>;
   app: pulumi.Input<any>;                          // temporary while refactoring
   publicSubnets: pulumi.Input<aws.ec2.Subnet[]>;
   alb: pulumi.Input<any>;                          // temporary while refactoring
+  logGroup: pulumi.Input<aws.cloudwatch.LogGroup>;
   tags?: { [key: string]: pulumi.Input<string> };
 }
 
@@ -16,63 +19,46 @@ export interface clusterArgs {
  *
  * Built as a component following https://www.pulumi.com/blog/pulumi-components/
  */
-export class Cluster extends pulumi.ComponentResource {
-  public readonly cluster: aws.ecs.Cluster;
-  public readonly loadBalancerUrl: string;
+export class Service extends pulumi.ComponentResource {
+  public readonly cluster: pulumi.Output<aws.ecs.Cluster>;
+  public readonly ecsTaskExecutionRole: pulumi.Output<aws.iam.Role>;
+  public readonly logGroup: pulumi.Output<aws.cloudwatch.LogGroup>;
 
-  constructor(name: string, args: clusterArgs, opts?: pulumi.ComponentResourceOptions) {
-    super("mycomponents:index:cluster", name, {}, opts);
+  constructor(name: string, args: serviceArgs, opts?: pulumi.ComponentResourceOptions) {
+    super("mycomponents:cluster:service", name, {}, opts);
 
-    /// Create cluster
-    this.cluster = new aws.ecs.Cluster("cluster", {
-      tags: {
-        ...args.tags
-      }
-    });
+    const { tags } = args;
 
-    /// Create ecsTaskExecutionRole, used to start/deploy tasks, not by the running task
-    //  It is used to pull Amazon ECR images (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)
-    const ecsTaskExecutionRole = new aws.iam.Role("ecsTaskExecutionRole", {
-      name: "ecsTaskExecutionRole",
-      assumeRolePolicy: JSON.stringify({
-        "Version": "2012-10-17",
-        "Statement": [
-          {
-            "Sid": "",
-            "Effect": "Allow",
-            "Principal": {
-              "Service": "ecs-tasks.amazonaws.com"
-            },
-            "Action": "sts:AssumeRole"
-          }
-        ]
-      }),
-      tags: {
-        "project": "wci-sample",
-      },
-    });
-
-    /// Attach AWS managed policy for execution tasks (we may need more permissions to fetch configuration values)
-    new aws.iam.RolePolicyAttachment("ecsRolePolicyAttachment", {
-      role: ecsTaskExecutionRole.name,
-      policyArn: "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-    });
+    this.cluster = pulumi.output(args.cluster);
+    this.ecsTaskExecutionRole = pulumi.output(args.taskExecutionRole);
+    this.logGroup = pulumi.output(args.logGroup);
 
     /// Create task definition for http hello-world service
     const httpTaskDefinition = new aws.ecs.TaskDefinition("httpTaskDefinition", {
       family: "http",
       requiresCompatibilities: ["FARGATE"],
-      executionRoleArn: ecsTaskExecutionRole.arn,
+      executionRoleArn: this.ecsTaskExecutionRole.apply(role => role.arn),
       networkMode: "awsvpc",
       cpu: "256", // 1024 CPU units == 1 vCPU
       memory: "512",
+      runtimePlatform: {
+        cpuArchitecture: 'X86_64', // ARM64'
+        operatingSystemFamily: 'LINUX'
+      },
+
+      // TODO: make serviceLogGroup
+      //
       /// 🤯 pulumi.all() makes this wait, so that apply actually happens on time. (race condition 🏎️)
-      containerDefinitions: pulumi.all([args.app.imageRef]).apply(([imageRef]) => {
-        const shortImageRef = imageRef.split('@')[0];
+      containerDefinitions: pulumi.all([args.app.imageName, this.logGroup.name]).apply(([imageName, logGroupName]) => {
+        // Strip the '@SHA...' from `${repo}/${image}:${tag}@SHA...` if present.
+        const shortImageName = imageName.split('@')[0];
+        console.log('logGroup.name:', logGroupName)
+        console.log('aws.config.region:', aws.config.region)
+        console.log('name', name)
         return JSON.stringify([
           {
             name: "hello-world",
-            image: shortImageRef,
+            image: shortImageName,
             //image: "696433927643.dkr.ecr.us-west-2.amazonaws.com/repo:latest",
             cpu: 256,
             memory: 512,
@@ -80,9 +66,18 @@ export class Cluster extends pulumi.ComponentResource {
             portMappings: [{
               containerPort: 80
             }],
+            logConfiguration: {
+              logDriver: "awslogs",
+              options: {
+                "awslogs-group": logGroupName,
+                "awslogs-region": aws.config.region,
+                "awslogs-stream-prefix": name,
+              }
+            }
           }
         ])
-      })
+      }),
+      tags
     }, {
       dependsOn: [args.app.image]
     });
@@ -126,7 +121,7 @@ export class Cluster extends pulumi.ComponentResource {
     /// Create service to run the hello-world server
     const httpService = new aws.ecs.Service("http", {
       name: "http",
-      cluster: this.cluster.id,
+      cluster: this.cluster.apply(c => c.id),
       launchType: "FARGATE",
       taskDefinition: httpTaskDefinition.arn,
       desiredCount: 3,
@@ -155,7 +150,7 @@ export class Cluster extends pulumi.ComponentResource {
         rollback: true,
       },
     }, {
-      dependsOn: [ecsTaskExecutionRole, args.alb.targetGroup],
+      dependsOn: [this.ecsTaskExecutionRole, args.alb.targetGroup],
     });
 
     /// Autoscaling configuration
@@ -184,11 +179,8 @@ export class Cluster extends pulumi.ComponentResource {
       },
     });
 
-    // TODO: move this to the ALB, the "cluster" does not need to know
-    this.loadBalancerUrl = 'https://' + args.alb.albDomainName;
-
     this.registerOutputs({
-      loadBalancerUrl: this.loadBalancerUrl
     });
   }
+
 }
