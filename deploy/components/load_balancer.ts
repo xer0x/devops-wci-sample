@@ -140,7 +140,7 @@ export class LoadBalancer extends pulumi.ComponentResource {
     });
 
     /// Add https listener for port 443
-    const httpsListener = new aws.lb.Listener("https-listener", {
+    new aws.lb.Listener("https-listener", {
       loadBalancerArn: alb.arn,
       port: 443,
       protocol: "HTTPS",
@@ -153,7 +153,7 @@ export class LoadBalancer extends pulumi.ComponentResource {
     });
 
     /// Add http listener for port 80
-    const httpListener = new aws.lb.Listener("http-listener", {
+    new aws.lb.Listener("http-listener", {
       loadBalancerArn: alb.arn,
       port: 80,
       defaultActions: [{
@@ -163,7 +163,7 @@ export class LoadBalancer extends pulumi.ComponentResource {
     });
 
     /// Add DNS Alias for custom domain that points to ALB
-    const aRecord = new aws.route53.Record("alb-aRecord", {
+    new aws.route53.Record("alb-aRecord", {
       zoneId: zone.then(z => z.zoneId),
       name: certificate.domainName,
       type: "A",
