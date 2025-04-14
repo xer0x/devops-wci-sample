@@ -2,7 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import * as docker_build from "@pulumi/docker-build";
 
-export interface containerArgs {
+export interface imageArgs {
   folder: pulumi.Input<string>;
   container: pulumi.Input<string>;
   push?: pulumi.Input<boolean>;
@@ -11,7 +11,7 @@ export interface containerArgs {
 }
 
 /**
- * Container
+ * Image -- builds and publishes a Docker compatible image to AWS ECR
  *
  * @param name
  * @param args.folder Expects a folder with a Dockerfile
@@ -22,12 +22,12 @@ export interface containerArgs {
  *
  * Built as a component following https://www.pulumi.com/blog/pulumi-components/
  */
-export class Container extends pulumi.ComponentResource {
+export class Image extends pulumi.ComponentResource {
   public readonly repository: aws.ecr.Repository;
   public readonly image: docker_build.Image;
   public readonly imageFullName: pulumi.Output<string>;
 
-  constructor(name: string, args: containerArgs, opts?: pulumi.ComponentResourceOptions) {
+  constructor(name: string, args: imageArgs, opts?: pulumi.ComponentResourceOptions) {
     super("mycomponents:index:container", name, {}, opts);
 
     // Create Amazon ECR to hold our containers

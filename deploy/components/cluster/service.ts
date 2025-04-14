@@ -49,7 +49,7 @@ export class Service extends pulumi.ComponentResource {
       // TODO: make serviceLogGroup
       //
       /// 🤯 pulumi.all() makes this wait, so that apply actually happens on time. (race condition 🏎️)
-      containerDefinitions: pulumi.all([args.app.imageName, this.logGroup.name]).apply(([imageName, logGroupName]) => {
+      containerDefinitions: pulumi.all([args.app.image.ref, this.logGroup.name]).apply(([imageName, logGroupName]) => {
         // Strip the '@SHA...' from `${repo}/${image}:${tag}@SHA...` if present.
         const shortImageName = imageName.split('@')[0];
         console.log('logGroup.name:', logGroupName)

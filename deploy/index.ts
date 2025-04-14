@@ -1,5 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as cluster from "./infrastructure/cluster";
+import * as cluster from "./infrastructure";
 
 const config = new pulumi.Config();
 const projectName = pulumi.getProject();
