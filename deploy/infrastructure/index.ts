@@ -22,7 +22,7 @@ const commonTags = {
   stack: stackName
 };
 
-const appImage = new Image('wci-hello', {
+const appImage = new Image(`${prefix}-image`, {
   folder: "../app",
   container: `${prefix}/hello-world`,
   tag: "latest",

@@ -57,11 +57,12 @@ export class Image extends pulumi.ComponentResource {
         location: args.folder,
       },
       // Use the pushed image as a cache source.
-      cacheFrom: [{
-        registry: {
-          ref: this.imageFullName,
-        },
-      }],
+      // Disabled cacheFrom, because it causes an error the first time that it runs
+      // cacheFrom: [{
+      //   registry: {
+      //     ref: this.imageFullName,
+      //   },
+      // }],
       // TODO: The cacheTo section causes an HTTP 400 error on PUT
       // cacheTo: [{
       //   registry: {
