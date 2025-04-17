@@ -24,7 +24,7 @@ const commonTags = {
 
 const appImage = new Image('wci-hello', {
   folder: "../app",
-  container: "wci/hello-world",
+  container: `${prefix}/hello-world`,
   tag: "latest",
   tags: { ...commonTags }
 })
