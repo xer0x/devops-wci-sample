@@ -10,7 +10,6 @@ export interface serviceArgs {
   app: pulumi.Input<any>;                          // temporary while refactoring
   publicSubnets: pulumi.Input<aws.ec2.Subnet[]>;
   alb: pulumi.Input<any>;                          // temporary while refactoring
-  logGroup: pulumi.Input<aws.cloudwatch.LogGroup>;
   tags?: { [key: string]: pulumi.Input<string> };
 }
 
@@ -22,7 +21,7 @@ export interface serviceArgs {
 export class Service extends pulumi.ComponentResource {
   public readonly cluster: pulumi.Output<aws.ecs.Cluster>;
   public readonly ecsTaskExecutionRole: pulumi.Output<aws.iam.Role>;
-  public readonly logGroup: pulumi.Output<aws.cloudwatch.LogGroup>;
+  public readonly logGroup: aws.cloudwatch.LogGroup;
 
   constructor(name: string, args: serviceArgs, opts?: pulumi.ComponentResourceOptions) {
     super("mycomponents:cluster:service", name, {}, opts);
@@ -31,10 +30,11 @@ export class Service extends pulumi.ComponentResource {
 
     this.cluster = pulumi.output(args.cluster);
     this.ecsTaskExecutionRole = pulumi.output(args.taskExecutionRole);
-    this.logGroup = pulumi.output(args.logGroup);
+    this.logGroup = new aws.cloudwatch.LogGroup(`${name}-logs`);
+
 
     /// Create task definition for http hello-world service
-    const httpTaskDefinition = new aws.ecs.TaskDefinition("httpTaskDefinition", {
+    const httpTaskDefinition = new aws.ecs.TaskDefinition(`${name}-task`, {
       family: "http",
       requiresCompatibilities: ["FARGATE"],
       executionRoleArn: this.ecsTaskExecutionRole.apply(role => role.arn),
@@ -50,7 +50,7 @@ export class Service extends pulumi.ComponentResource {
       //
       /// 🤯 pulumi.all() makes this wait, so that apply actually happens on time. (race condition 🏎️)
       containerDefinitions: pulumi.all([args.app.image.ref, this.logGroup.name]).apply(([imageName, logGroupName]) => {
-        // Strip the '@SHA...' from `${repo}/${image}:${tag}@SHA...` if present.
+        // Strip the '@SHA...' from `${ repo } / ${ image }: ${ tag }@SHA...` if present.
         const shortImageName = imageName.split('@')[0];
         console.log('logGroup.name:', logGroupName)
         console.log('aws.config.region:', aws.config.region)

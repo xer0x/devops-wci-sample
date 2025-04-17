@@ -62,8 +62,8 @@ export class LoadBalancer extends pulumi.ComponentResource {
       });
     });
 
-    /// Sync validation process
-    const awsCertificateValidation = new aws.acm.CertificateValidation('http-cert-validation', {
+    /// Refence to the certificate validation process
+    new aws.acm.CertificateValidation('http-cert-validation', {
       certificateArn: certificate.arn,
       validationRecordFqdns: validationRecords.apply(records => records.map(record => record.fqdn)),
     });
@@ -175,6 +175,7 @@ export class LoadBalancer extends pulumi.ComponentResource {
     });
 
     this.registerOutputs({
+      domainName: this.domainName,
       targetGroup: this.targetGroup,
       securityGroup: this.securityGroup
     });

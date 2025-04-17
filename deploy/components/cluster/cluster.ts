@@ -16,7 +16,6 @@ export interface clusterArgs {
  */
 export class Cluster extends pulumi.ComponentResource {
   public readonly cluster: aws.ecs.Cluster;
-  //public readonly loadBalancerUrl: string;
   public readonly ecsTaskExecutionRole: aws.iam.Role;
 
   constructor(name: string, args: clusterArgs, opts?: pulumi.ComponentResourceOptions) {
@@ -35,12 +34,6 @@ export class Cluster extends pulumi.ComponentResource {
       tags
     }).ecsTaskExecutionRole;
 
-
-    // TODO: move this to the ALB, the "cluster" does not need to know
-    //this.loadBalancerUrl = 'https://' + args.alb.albDomainName;
-
-    this.registerOutputs({
-      //loadBalancerUrl: this.loadBalancerUrl
-    });
+    this.registerOutputs({});
   }
 }

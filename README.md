@@ -68,3 +68,14 @@ Setting up an Application Load Balancer with DNS took awhile to configure the DN
 I started adding tests. However since everything loaded at once, I started refactoring into TypeScript classes using Pulumi's component library pattern. I'm hoping that this pattern helps make the system easier to write tests for.
 
 I moved the Pulumi resources into the /deploy folder. It's an experiment to tidy up the root folder.
+
+To rename items in the state file:
+
+```
+# Look up the URNs of resources in the stack:
+$ pulumi stack -u
+....
+
+# Rename an item (example)
+$ pulumi state rename "urn:pulumi:dev::wci-sample::aws:ecs/taskDefinition:TaskDefinition::httpTaskDefinition" http-task
+```
