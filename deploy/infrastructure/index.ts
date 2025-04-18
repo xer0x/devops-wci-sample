@@ -29,7 +29,7 @@ const appImage = new Image(`${prefix}-image`, {
   tags: { ...commonTags }
 })
 
-const myvpc = new Vpc("wci-vpc");
+const myvpc = new Vpc(`${prefix}-vpc`/*, { tags: commonTags }*/);
 
 const alb = new LoadBalancer("wci-alb", {
   domainName,

@@ -1,4 +1,4 @@
-name: wci-sample
+name: wci
 description: A minimal AWS TypeScript Pulumi program
 runtime:
   name: nodejs

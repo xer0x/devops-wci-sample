@@ -1,4 +1,4 @@
 config:
   aws:region: us-west-2
   aws:profile: pulumi-2025
-  wci-sample:domainname: example1.dev.sluglab.com
+  wci:domainname: example1.dev.your-domain.com
